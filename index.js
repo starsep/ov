@@ -1,10 +1,10 @@
 const META_KEY_TYPE = "_type";
 const META_KEY_PLACE = "_place";
 const META_KEY_AREA = "_area";
+const META_KEY_NAMES = "_names";
 
-function renderData(data) {
+function renderData(data, meta) {
     const elements = data.elements.filter(element => element.tags !== undefined);
-    console.log(elements);
     const nodes = elements.filter(element => element.type === "node") // TODO: handle other types
     if (nodes.length === 0) return; // TODO: no data error
     function average(a) {
@@ -26,7 +26,12 @@ function renderData(data) {
     }
 
     nodes.forEach(node => {
-        L.marker([node["lat"], node["lon"]]).addTo(map).bindPopup(tagsToHtml(node["tags"]));
+        const marker = L.marker([node["lat"], node["lon"]])
+            .bindPopup(tagsToHtml(node["tags"]))
+        if (meta[META_KEY_NAMES] !== undefined && node["tags"]["name"]) {
+            marker.bindTooltip(node["tags"]["name"], {permanent: true, direction : 'right'})
+        }
+        marker.addTo(map);
     });
 }
 
@@ -91,7 +96,7 @@ async function main() {
     const metaArea = await replacePlaceWithArea(meta);
     const overpassQuery = buildOverpassQuery(tags, metaArea);
     const overpassData = await fetchOverpassData(overpassQuery);
-    renderData(overpassData);
+    renderData(overpassData, meta);
 }
 
 
