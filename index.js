@@ -17,30 +17,41 @@ function showMap() {
 }
 
 function renderData(map, data, meta) {
-    const elements = data.elements.filter(element => element.tags !== undefined);
-    const nodes = elements.filter(element => element.type === "node") // TODO: handle other types
-    if (nodes.length === 0) return; // TODO: no data error
-    const lat = nodes.map(node => node["lat"])
-    const lon = nodes.map(node => node["lon"]);
-    map.fitBounds([
-        [Math.min(...lat), Math.min(...lon)],
-        [Math.max(...lat), Math.max(...lon)],
-    ]);
-
+    const elements = data.elements;
+    const nodesMap = new Map();
+    elements
+        .filter(element => element.type === "node")
+        .forEach(node => nodesMap.set(node["id"], node));
+    const features = elements.filter(element => element.tags !== undefined);
+    const markersGroup = new L.FeatureGroup();
+    const nodeFeatures = features.filter(element => element.type === "node");
+    const wayFeatures = features.filter(element => element.type === "way");
+    // TODO: handle other relations?
+    if (nodeFeatures.length + wayFeatures.length === 0) return; // TODO: no data error
     function tagsToHtml(tags) {
         return Object.entries(tags)
             .map(([key, value]) => `<b>${key}</b>=${value}<br/>`)
             .reduce((acc, value) => acc + value, "")
     }
 
-    nodes.forEach(node => {
-        const marker = L.marker([node["lat"], node["lon"]])
-            .bindPopup(tagsToHtml(node["tags"]))
-        if (meta[META_KEY_NAMES] !== undefined && node["tags"]["name"]) {
-            marker.bindTooltip(node["tags"]["name"], {permanent: true})
+    function showMarker(latLon, tags) {
+        const marker = L.marker(latLon).bindPopup(tagsToHtml(tags))
+        if (meta[META_KEY_NAMES] !== undefined && tags["name"]) {
+            marker.bindTooltip(tags["name"], {permanent: true})
         }
-        marker.addTo(map);
+        markersGroup.addLayer(marker);
+    }
+
+    nodeFeatures.forEach(node => {
+        showMarker([node["lat"], node["lon"]], node["tags"]);
     });
+    wayFeatures.forEach(way => {
+        const coords = way.nodes.map(nodeId => nodesMap.get(nodeId)).map(node => [node["lat"], node["lon"]]);
+        const polygon = L.polygon(coords, {color: "blue"}).addTo(map);
+        showMarker(polygon.getBounds().getCenter(), way["tags"]);
+    });
+    markersGroup.addTo(map);
+    map.fitBounds(markersGroup.getBounds());
 }
 
 function parseData() {
@@ -90,7 +101,8 @@ function buildOverpassQuery(tags, meta) {
 }
 
 async function fetchOverpassData(query) {
-    const url = "https://overpass-api.de/api/interpreter";
+    const overpassHost = "https://overpass-api.de";
+    const url = overpassHost + "/api/interpreter";
     const form = new FormData();
     form.set("data", query)
     return await fetch(url, {
