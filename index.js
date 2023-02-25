@@ -3,21 +3,29 @@ const META_KEY_PLACE = "_place";
 const META_KEY_AREA = "_area";
 const META_KEY_NAMES = "_names";
 
-function renderData(data, meta) {
+function setLoadingVisibility(visible) {
+    document.getElementById("loader").hidden = !visible;
+}
+
+function showMap() {
+    const map = L.map('map', {
+        center: [52.231, 21.006],
+        zoom: 14,
+    });
+    L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'}).addTo(map);
+    return map;
+}
+
+function renderData(map, data, meta) {
     const elements = data.elements.filter(element => element.tags !== undefined);
     const nodes = elements.filter(element => element.type === "node") // TODO: handle other types
     if (nodes.length === 0) return; // TODO: no data error
-    function average(a) {
-        return a.reduce((acc, value) => acc + value, 0) / a.length;
-    }
-    const lat = average(nodes.map(node => node["lat"]))
-    const lon = average(nodes.map(node => node["lon"]));
-
-    const map = L.map('map', {
-        center: [lat, lon],
-        zoom: 14 // TODO: calculate zoom
-    });
-    L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'}).addTo(map);
+    const lat = nodes.map(node => node["lat"])
+    const lon = nodes.map(node => node["lon"]);
+    map.fitBounds([
+        [Math.min(...lat), Math.min(...lon)],
+        [Math.max(...lat), Math.max(...lon)],
+    ]);
 
     function tagsToHtml(tags) {
         return Object.entries(tags)
@@ -29,7 +37,7 @@ function renderData(data, meta) {
         const marker = L.marker([node["lat"], node["lon"]])
             .bindPopup(tagsToHtml(node["tags"]))
         if (meta[META_KEY_NAMES] !== undefined && node["tags"]["name"]) {
-            marker.bindTooltip(node["tags"]["name"], {permanent: true, direction : 'right'})
+            marker.bindTooltip(node["tags"]["name"], {permanent: true})
         }
         marker.addTo(map);
     });
@@ -49,7 +57,7 @@ function parseData() {
     return {tags, meta};
 }
 
-async function replacePlaceWithArea(meta) {
+async function replacePlaceWithArea(map, meta) {
     if (meta[META_KEY_PLACE] === undefined) return meta;
     const place = meta[META_KEY_PLACE];
     const data = await fetch(`https://nominatim.openstreetmap.org/search?q=${place}&format=json`, {
@@ -92,11 +100,14 @@ async function fetchOverpassData(query) {
 }
 
 async function main() {
+    setLoadingVisibility(true);
+    const map = showMap();
     const {tags, meta} = parseData();
-    const metaArea = await replacePlaceWithArea(meta);
+    const metaArea = await replacePlaceWithArea(map, meta);
     const overpassQuery = buildOverpassQuery(tags, metaArea);
     const overpassData = await fetchOverpassData(overpassQuery);
-    renderData(overpassData, meta);
+    renderData(map, overpassData, meta);
+    setLoadingVisibility(false);
 }
 
 
