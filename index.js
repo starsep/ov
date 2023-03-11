@@ -87,7 +87,7 @@ async function replacePlaceWithArea(map, meta) {
 }
 
 function buildOverpassQuery(tags, meta) {
-    const tagsSelector = Object.entries(tags).map(([tag, value]) => value === "" ? `["${tag}"]` : `["${tag}"="${value}"]`);
+    const tagsSelector = Object.entries(tags).map(([tag, value]) => value === "" ? `["${tag}"]` : `["${tag}"="${value}"]`).join("");
     return `
         [out:json][timeout:25];
         area(id:${meta[META_KEY_AREA]})->.searchArea;
