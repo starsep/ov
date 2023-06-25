@@ -2,17 +2,30 @@ const META_KEY_TYPE = "_type";
 const META_KEY_PLACE = "_place";
 const META_KEY_AREA = "_area";
 const META_KEY_NAMES = "_names";
+const META_KEY_WMS = "_wms";
+const META_KEY_WMS_URL = "_wms_url";
+const META_KEY_WMS_LAYERS = "_wms_layers";
+
+const WMS_LIST = {
+    "WAW": "https://mapa.um.warszawa.pl/mapviewer/wms",
+}
 
 function setLoadingVisibility(visible) {
     document.getElementById("loader").hidden = !visible;
 }
 
-function showMap() {
+function showMap(meta) {
     const map = L.map('map', {
         center: [52.231, 21.006],
         zoom: 14,
     });
-    L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'}).addTo(map);
+    if (meta[META_KEY_WMS_URL] !== undefined && meta[META_KEY_WMS_LAYERS] !== undefined) {
+        L.tileLayer.wms(meta[META_KEY_WMS_URL], {
+            layers: meta[META_KEY_WMS_LAYERS]
+        }).addTo(map);
+    } else {
+        L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'}).addTo(map);
+    }
     return map;
 }
 
@@ -65,6 +78,9 @@ function parseData() {
         }
     }
     if (meta[META_KEY_TYPE] === undefined) meta[META_KEY_TYPE] = "nwr";
+    if (meta[META_KEY_WMS] !== undefined && WMS_LIST[meta[META_KEY_WMS]] !== undefined) {
+        meta[META_KEY_WMS_URL] = WMS_LIST[meta[META_KEY_WMS]];
+    }
     return {tags, meta};
 }
 
@@ -113,8 +129,8 @@ async function fetchOverpassData(query) {
 
 async function main() {
     setLoadingVisibility(true);
-    const map = showMap();
     const {tags, meta} = parseData();
+    const map = showMap(meta);
     const metaArea = await replacePlaceWithArea(map, meta);
     const overpassQuery = buildOverpassQuery(tags, metaArea);
     const overpassData = await fetchOverpassData(overpassQuery);
