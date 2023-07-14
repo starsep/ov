@@ -60,8 +60,11 @@ function renderData(map, data, meta) {
     });
     wayFeatures.forEach(way => {
         const coords = way.nodes.map(nodeId => nodesMap.get(nodeId)).map(node => [node["lat"], node["lon"]]);
-        const polygon = L.polygon(coords, {color: "blue"}).addTo(map);
-        showMarker(polygon.getBounds().getCenter(), way["tags"]);
+        const wayObject = (coords[0][0] === coords[coords.length - 1][0] && coords[0][1] === coords[coords.length - 1][1])
+            ? L.polygon(coords, {color: "blue"})
+            : L.polyline(coords, {color: "blue"});
+        wayObject.addTo(map);
+        showMarker(wayObject.getBounds().getCenter(), way["tags"]);
     });
     markersGroup.addTo(map);
     map.fitBounds(markersGroup.getBounds());
