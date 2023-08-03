@@ -1,0 +1,3 @@
+[submodule "3rdparty/Leaflet.ExtraMarkers"]
+	path = 3rdparty/Leaflet.ExtraMarkers
+	url = https://github.com/coryasilva/Leaflet.ExtraMarkers

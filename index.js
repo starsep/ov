@@ -2,6 +2,7 @@ const META_KEY_TYPE = "_type";
 const META_KEY_PLACE = "_place";
 const META_KEY_AREA = "_area";
 const META_KEY_NAMES = "_names";
+const META_KEY_ICON = "_icon";
 const META_KEY_WMS = "_wms";
 const META_KEY_WMS_URL = "_wms_url";
 const META_KEY_WMS_LAYERS = "_wms_layers";
@@ -49,10 +50,18 @@ function renderData(map, data, meta) {
             .reduce((acc, value) => acc + value, "")
     }
 
+    const iconMarker = meta[META_KEY_ICON] ? L.ExtraMarkers.icon({
+        icon: meta[META_KEY_ICON],
+        markerColor: "blue",
+        shape: "square",
+        prefix: "fa", // TODO: allow more icon customization?
+    }) : null;
+
     function showMarker(latLon, tags) {
-        const marker = L.marker(latLon).bindPopup(tagsToHtml(tags))
+        const marker = iconMarker ? L.marker(latLon, {icon: iconMarker}) : L.marker(latLon);
+        marker.bindPopup(tagsToHtml(tags));
         if (meta[META_KEY_NAMES] !== undefined && tags["name"]) {
-            marker.bindTooltip(tags["name"], {permanent: true})
+            marker.bindTooltip(tags["name"], {permanent: true});
         }
         markersGroup.addLayer(marker);
     }
