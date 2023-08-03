@@ -1,13 +1,23 @@
-<html>
+<!DOCTYPE html>
+<html lang="en">
 <head>
+    <meta charset="utf-8">
     <title>OverpassViewer</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.3/dist/leaflet.css" integrity="sha256-kLaT2GOSpHechhsozzB+flnD+zUyjE2LlfWPgU04xyI=" crossorigin="" />
     <link rel="stylesheet" href="index.css" />
     <script src="https://unpkg.com/leaflet@1.9.3/dist/leaflet.js" integrity="sha256-WBkoXOwTeyKclOHuWtc+i2uENFpDZ9YPdf5Hf+D7ewM=" crossorigin=""></script>
 </head>
-<body style="margin: 0; padding: 0">
+<body style="margin: 0; padding: 0; height: 100vh; width: 100%">
     <div id="loader" class="loading" hidden>Loading&#8230;</div>
-    <div id="map" style="height: 100%; width: 100%; padding: 0; z-index: 1"></div>
+    <div id="map" style="height: 100%; width: 100%; padding: 0; z-index: 1" hidden></div>
+    <div id="form">
+        <label for="place">Place</label>
+        <input type="text" name="_place" id="place" placeholder="place" value="Warszawa" required/> <br/>
+        <input type="text" name="key0" id="key0" class="keyInput" placeholder="key" required/>
+        <input type="text" name="value0" id="value0" class=valueInput" placeholder="value" required/> <br/>
+        <button onclick="addTagKeyInput()">+ Add key/value</button> <br/>
+        <button onclick="onFormSubmit()">Submit</button>
+    </div>
     <script src="index.js"></script>
 </body>
 </html>

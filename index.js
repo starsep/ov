@@ -15,6 +15,8 @@ function setLoadingVisibility(visible) {
 }
 
 function showMap(meta) {
+    document.getElementById("form").hidden = true;
+    document.getElementById("map").hidden = false;
     const map = L.map('map', {
         center: [52.231, 21.006],
         zoom: 14,
@@ -131,14 +133,47 @@ async function fetchOverpassData(query) {
 }
 
 async function main() {
-    setLoadingVisibility(true);
     const {tags, meta} = parseData();
+    if (Object.entries(tags).length === 0) return;
+    setLoadingVisibility(true);
     const map = showMap(meta);
     const metaArea = await replacePlaceWithArea(map, meta);
     const overpassQuery = buildOverpassQuery(tags, metaArea);
     const overpassData = await fetchOverpassData(overpassQuery);
     renderData(map, overpassData, meta);
     setLoadingVisibility(false);
+}
+
+function onFormSubmit() {
+    const keysCount = document.getElementsByClassName("keyInput").length;
+    const place = document.getElementById("place").value;
+    let tagsString = "";
+    for (let i = 0; i < keysCount; i++) {
+        const key = encodeURIComponent(document.getElementById(`key${i}`).value);
+        const value = encodeURIComponent(document.getElementById(`value${i}`).value);
+        if (key.length > 0) tagsString += `&${key}=${value}`;
+    }
+    window.location.href = `?${META_KEY_PLACE}=${place}${tagsString}`;
+}
+
+function addTagKeyInput() {
+    const keysCount = document.getElementsByClassName("keyInput").length;
+    const lastValueElement = document.getElementById(`value${keysCount - 1}`);
+    const newKeyInput = document.createElement("input");
+    newKeyInput.type = "text";
+    newKeyInput.id = `key${keysCount}`;
+    newKeyInput.name = `key${keysCount}`;
+    newKeyInput.className = "keyInput";
+    newKeyInput.placeholder = "key";
+    const newValueInput = document.createElement("input");
+    newValueInput.type = "text";
+    newValueInput.id = `value${keysCount}`;
+    newValueInput.name = `value${keysCount}`;
+    newValueInput.className = "valueInput";
+    newValueInput.placeholder = "value";
+    lastValueElement.insertAdjacentElement("afterend", newValueInput);
+    lastValueElement.insertAdjacentElement("afterend", newKeyInput);
+    lastValueElement.insertAdjacentElement("afterend", document.createElement("br"));
 }
 
 
