@@ -12,6 +12,10 @@ const WMS_LIST = {
     "WAW": "https://mapa.um.warszawa.pl/mapviewer/wms",
 }
 
+const BASEMAP_LIST = {
+    "OPNVKarte": "https://tileserver.memomaps.de/tilegen/{z}/{x}/{y}.png",
+}
+
 function setLoadingVisibility(visible) {
     document.getElementById("loader").hidden = !visible;
 }
@@ -24,12 +28,13 @@ function showMap(meta) {
         zoom: 14,
     });
     const osmAttribution = '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors';
+    console.log(META_KEY_BASEMAP, meta[META_KEY_BASEMAP], BASEMAP_LIST[meta[META_KEY_BASEMAP]])
     if (meta[META_KEY_WMS_URL] !== undefined && meta[META_KEY_WMS_LAYERS] !== undefined) {
         L.tileLayer.wms(meta[META_KEY_WMS_URL], {
             layers: meta[META_KEY_WMS_LAYERS]
         }).addTo(map);
-    } else if (meta[META_KEY_BASEMAP] === "OPNVKarte") {
-        L.tileLayer('https://tileserver.memomaps.de/tilegen/{z}/{x}/{y}.png', {attribution: osmAttribution}).addTo(map);
+    } else if (meta[META_KEY_BASEMAP] !== undefined && BASEMAP_LIST[meta[META_KEY_BASEMAP]] !== undefined) {
+        L.tileLayer(BASEMAP_LIST[meta[META_KEY_BASEMAP]], {attribution: osmAttribution}).addTo(map);
     } else {
         L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {attribution: osmAttribution}).addTo(map);
     }
