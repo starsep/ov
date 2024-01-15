@@ -3,6 +3,7 @@ const META_KEY_PLACE = "_place";
 const META_KEY_AREA = "_area";
 const META_KEY_NAMES = "_names";
 const META_KEY_ICON = "_icon";
+const META_KEY_BASEMAP = "_basemap";
 const META_KEY_WMS = "_wms";
 const META_KEY_WMS_URL = "_wms_url";
 const META_KEY_WMS_LAYERS = "_wms_layers";
@@ -22,12 +23,15 @@ function showMap(meta) {
         center: [52.231, 21.006],
         zoom: 14,
     });
+    const osmAttribution = '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors';
     if (meta[META_KEY_WMS_URL] !== undefined && meta[META_KEY_WMS_LAYERS] !== undefined) {
         L.tileLayer.wms(meta[META_KEY_WMS_URL], {
             layers: meta[META_KEY_WMS_LAYERS]
         }).addTo(map);
+    } else if (meta[META_KEY_BASEMAP] === "OPNVKarte") {
+        L.tileLayer('https://tileserver.memomaps.de/tilegen/{z}/{x}/{y}.png', {attribution: osmAttribution}).addTo(map);
     } else {
-        L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'}).addTo(map);
+        L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {attribution: osmAttribution}).addTo(map);
     }
     return map;
 }
